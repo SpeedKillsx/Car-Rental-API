@@ -1,0 +1,1 @@
+ALTER TABLE car add  COLUMN state varchar;
