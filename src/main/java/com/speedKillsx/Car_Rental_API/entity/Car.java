@@ -1,20 +1,26 @@
 package com.speedKillsx.Car_Rental_API.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import com.speedKillsx.Car_Rental_API.enums.CAR_STATUS;
+import jakarta.persistence.*;
 import lombok.*;
-import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 @Entity
-@Slf4j
 @Data
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Car {
     @Id
     private String matricule;
 
     private String model;
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private CAR_STATUS state;
+
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Location> location;
 }

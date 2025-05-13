@@ -1,0 +1,3 @@
+CREATE SEQUENCE IF NOT EXISTS client_id_seq START WITH 1 INCREMENT BY 1;
+ALTER TABLE client ALTER COLUMN id SET DEFAULT nextval('client_id_seq');
+ALTER SEQUENCE client_id_seq OWNED BY client.id;
