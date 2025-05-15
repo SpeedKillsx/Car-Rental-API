@@ -3,9 +3,12 @@ package com.speedKillsx.Car_Rental_API.service;
 import com.speedKillsx.Car_Rental_API.dto.CarDtoIn;
 import com.speedKillsx.Car_Rental_API.dto.CarDtoOut;
 import com.speedKillsx.Car_Rental_API.entity.Car;
+import com.speedKillsx.Car_Rental_API.entity.Inspection;
 import com.speedKillsx.Car_Rental_API.enums.CAR_STATUS;
+import com.speedKillsx.Car_Rental_API.enums.INSPECTION_STATUS;
 import com.speedKillsx.Car_Rental_API.mapper.CarMapper;
 import com.speedKillsx.Car_Rental_API.repository.CarRepository;
+import com.speedKillsx.Car_Rental_API.repository.InspectionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +22,15 @@ public class CarService {
 
     private final CarRepository carRepository;
     private final CarMapper carMapper;
-
-    public CarService(CarRepository carRepository, CarMapper carMapper) {
+    private final InspectionRepository inspectionRepository;
+    private final InspectionService inspectionService;
+    public CarService(CarRepository carRepository, CarMapper carMapper,
+                      InspectionRepository inspectionRepository,
+                      InspectionService inspectionService) {
         this.carRepository = carRepository;
         this.carMapper = carMapper;
+        this.inspectionRepository = inspectionRepository;
+        this.inspectionService = inspectionService;
     }
 
     public CarDtoOut addCar(CarDtoIn carDtoIn) {
@@ -34,6 +42,7 @@ public class CarService {
                 .matricule(carDtoIn.getMatricule())
                 .model(carDtoIn.getModel())
                 .state(AVAILABLE)
+                .distanceTraveled(0L)
                 .build();
         carRepository.save(carMapper.toCar(carDtoOut));
         return carDtoOut;
@@ -64,6 +73,22 @@ public class CarService {
 
         }
 
+        /*CHECK INSPECTION*/
+        if (car.getState() == CAR_STATUS.MAINTENANCE) return false;
+        if (car.getDistanceTraveled()> 150000L){
+            log.warn("[isCarRentable] Car has more than 150km traveled");
+            log.info("[isCarRentable] Check if car is under maintenance");
+            List<Inspection> inspections = inspectionRepository.findAllByCar_Matricule(car.getMatricule());
+            for (Inspection inspection : inspections) {
+                if(inspection.getStateInspection() == INSPECTION_STATUS.TECHNICAL_INSPECTION) return true;
+            }
+            log.warn("[isCarRentable] The car traveled more than 150km without a technical inspection");
+            return false;
+        }
+
+        if(inspectionService.isCarWithinAllowedRentalPeriod(matricule)){
+            return true;
+        }
         return false;
     }
 

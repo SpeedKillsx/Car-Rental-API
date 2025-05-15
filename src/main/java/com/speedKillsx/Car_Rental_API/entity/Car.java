@@ -20,6 +20,7 @@ public class Car {
     private String model;
     @Enumerated(EnumType.STRING)
     private CAR_STATUS state;
+    private long distanceTraveled;
 
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Location> location;

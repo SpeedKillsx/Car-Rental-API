@@ -12,4 +12,5 @@ public class CarDtoOut {
     private String matricule;
     private String model;
     private CAR_STATUS state;
+    private Long distanceTraveled;
 }

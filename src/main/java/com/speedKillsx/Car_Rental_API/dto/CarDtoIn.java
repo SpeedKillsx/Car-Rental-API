@@ -11,4 +11,5 @@ import lombok.*;
 public class CarDtoIn {
     private String matricule;
     private String model;
+    private long distanceTraveled;
 }

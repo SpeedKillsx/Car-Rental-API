@@ -3,6 +3,7 @@ package com.speedKillsx.Car_Rental_API.service;
 import com.speedKillsx.Car_Rental_API.dto.ClientLocationDto;
 import com.speedKillsx.Car_Rental_API.dto.LocationDtoIn;
 import com.speedKillsx.Car_Rental_API.dto.LocationDtoOut;
+import com.speedKillsx.Car_Rental_API.entity.Car;
 import com.speedKillsx.Car_Rental_API.entity.Client;
 import com.speedKillsx.Car_Rental_API.entity.Location;
 import com.speedKillsx.Car_Rental_API.enums.CAR_STATUS;
@@ -23,12 +24,14 @@ public class LocationService {
     private final LocationRepository locationRepository;
     private final LocationMapper locationMapper;
     private final ClientRepository clientRepository;
+    private final InspectionService inspectionService;
 
     public LocationService(LocationRepository locationRepository,
-                           LocationMapper locationMapper, ClientRepository clientRepository) {
+                           LocationMapper locationMapper, ClientRepository clientRepository, InspectionService inspectionService) {
         this.locationRepository = locationRepository;
         this.locationMapper = locationMapper;
         this.clientRepository = clientRepository;
+        this.inspectionService = inspectionService;
     }
 
     public LocationDtoOut addLocation(LocationDtoIn locationDtoIn) {
@@ -62,8 +65,13 @@ public class LocationService {
             log.warn("[addLocation] Client is in debt or caution blocked state");
             return null;
         }
-
+        if(!inspectionService.isCarWithinAllowedRentalPeriod(location.getCar().getMatricule())){
+            return null;
+        }
         locationRepository.save(location);
+        Car carLocation = location.getCar();
+        carLocation.setState(CAR_STATUS.ON_LOCATION);
+        carLocation.getLocation().add(location);
         log.info("[addLocation] Location added");
         return locationMapper.toLocationDtoOut(location);
     }
