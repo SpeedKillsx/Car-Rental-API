@@ -4,6 +4,7 @@ import com.speedKillsx.Car_Rental_API.dto.CarDtoIn;
 import com.speedKillsx.Car_Rental_API.dto.CarDtoOut;
 import com.speedKillsx.Car_Rental_API.entity.Car;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
 

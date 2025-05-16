@@ -1,22 +1,20 @@
 package com.speedKillsx.Car_Rental_API.dto;
 
-import com.speedKillsx.Car_Rental_API.enums.LOCATION_STATE;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class LocationDtoIn {
-    private int id;
+@NoArgsConstructor
+@Builder
+public class RestituationDTOIn {
     private LocalDate dateBegin;
     private LocalDate dateEnd;
-    private BigDecimal amount;
-    private LOCATION_STATE locationState;
+    private LocalDate dateRestitution;
     private String carMatricule;
     private int clientId;
 }

@@ -1,5 +1,6 @@
 package com.speedKillsx.Car_Rental_API.entity;
 
+import com.speedKillsx.Car_Rental_API.enums.LOCATION_STATE;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,10 +17,12 @@ public class Location {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private LocalDate dateBegin;
     private LocalDate dateEnd;
     private BigDecimal amount;
-    private String locationState;
+    @Enumerated(EnumType.STRING)
+    private LOCATION_STATE locationState;
 
 
     @ManyToOne

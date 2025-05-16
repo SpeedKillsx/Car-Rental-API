@@ -10,6 +10,7 @@ import com.speedKillsx.Car_Rental_API.enums.CAR_STATUS;
 import com.speedKillsx.Car_Rental_API.enums.CLIENT_STATUS;
 import com.speedKillsx.Car_Rental_API.enums.LOCATION_STATE;
 import com.speedKillsx.Car_Rental_API.mapper.LocationMapper;
+import com.speedKillsx.Car_Rental_API.repository.CarRepository;
 import com.speedKillsx.Car_Rental_API.repository.ClientRepository;
 import com.speedKillsx.Car_Rental_API.repository.LocationRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -25,56 +26,94 @@ public class LocationService {
     private final LocationMapper locationMapper;
     private final ClientRepository clientRepository;
     private final InspectionService inspectionService;
+    private final CarRepository carRepository;
 
     public LocationService(LocationRepository locationRepository,
-                           LocationMapper locationMapper, ClientRepository clientRepository, InspectionService inspectionService) {
+                           LocationMapper locationMapper, ClientRepository clientRepository, InspectionService inspectionService, CarRepository carRepository) {
         this.locationRepository = locationRepository;
         this.locationMapper = locationMapper;
         this.clientRepository = clientRepository;
         this.inspectionService = inspectionService;
+        this.carRepository = carRepository;
     }
 
     public LocationDtoOut addLocation(LocationDtoIn locationDtoIn) {
         log.info("[addLocation] Adding location...");
+
         Location location = locationMapper.toLocation(locationDtoIn);
+
+        // Récupération du client
         log.info("[addLocation] Searching client by id: {}", locationDtoIn.getClientId());
+        Optional<Client> clientOpt = clientRepository.findById(locationDtoIn.getClientId());
+        if (clientOpt.isEmpty()) {
+            log.warn("[addLocation] Client not found");
+            return null;
+        }
+        Client client = clientOpt.get();
+        log.info("[addLocation] Client found: {}", client.getEmail());
 
-        Optional<Client> client = clientRepository.findById(locationDtoIn.getClientId());
-        int locationDuration = location.getDateBegin().getDayOfYear() - location.getDateEnd().getDayOfYear();
-        log.info("[addLocation] The location is etablish for {} days", locationDuration);
-        if (client.isEmpty()) return null;
+        // Récupération de la voiture
+        log.info("[addLocation] Searching car by matricule: {}", locationDtoIn.getCarMatricule());
+        Car car = carRepository.findByMatricule(locationDtoIn.getCarMatricule());
+        if (car == null) {
+            log.warn("[addLocation] Car not found");
+            return null;
+        }
+        log.info("[addLocation] Car found");
 
-        Optional<ClientLocationDto> activeLocation = clientRepository.FindClientActiveLocation(client.get().getEmail());
+        // Calcul de la durée
+        int locationDuration = location.getDateEnd().getDayOfYear() - location.getDateBegin().getDayOfYear();
+        log.info("[addLocation] The location is established for {} days", locationDuration);
 
-        if (activeLocation.isPresent() && activeLocation.get().getNumberOfLocations() > 0) {
-            log.warn("[addLocation] Client already has an active location {} , He cannot have more than {} active locations"
-                    , activeLocation.get().getNumberOfLocations(), activeLocation.get().getNumberOfLocations());
+        Optional<ClientLocationDto> activeLocation = clientRepository.FindClientActiveLocation(client.getEmail());
+        if (activeLocation.isPresent() && activeLocation.get().getNumberOfLocations() >= 2) {
+            log.warn("[addLocation] Client has too many active locations: {}", activeLocation.get().getNumberOfLocations());
             return null;
         }
 
         if (locationDuration > 30) {
-            log.warn("[addLocation] The location is etablish for more than 30 days");
-            return null;
-        } else if (location.getCar().getState().equals(CAR_STATUS.ON_LOCATION.toString())) {
-            log.warn("[addLocation] The car is already on location");
-            return null;
-        } else if (locationDuration < 1) {
-            log.warn("[addLocation] The location is etablish for less than 1 day");
-        } else if (client.get().getStateClient().equals(CLIENT_STATUS.DEBT.toString())
-                || client.get().getStateClient().equals(CLIENT_STATUS.CAUTION_BLOCKED.toString())) {
-            log.warn("[addLocation] Client is in debt or caution blocked state");
+            log.warn("[addLocation] Location duration exceeds 30 days");
             return null;
         }
-        if(!inspectionService.isCarWithinAllowedRentalPeriod(location.getCar().getMatricule())){
+
+        if (locationDuration < 1) {
+            log.warn("[addLocation] Location duration is less than 1 day");
             return null;
         }
+
+        if (car.getState() == CAR_STATUS.ON_LOCATION) {
+            log.warn("[addLocation] Car is already on location");
+            return null;
+        }
+
+        if (client.getStateClient() == CLIENT_STATUS.DEBT || client.getStateClient() == CLIENT_STATUS.CAUTION_BLOCKED) {
+            log.warn("[addLocation] Client is not eligible (debt or caution blocked)");
+            return null;
+        }
+
+        if (!inspectionService.isCarWithinAllowedRentalPeriod(car.getMatricule())) {
+            log.warn("[addLocation] Car has not driven enough km for a new rental");
+            return null;
+        }
+
+        log.info("[addLocation] All business rules passed");
+
+        location.setCar(car);
+        location.setClient(client);
+        location.setLocationState(LOCATION_STATE.ACTIVE);
+        log.info("[addLocation] Location ID {} ", location.getId());
         locationRepository.save(location);
-        Car carLocation = location.getCar();
-        carLocation.setState(CAR_STATUS.ON_LOCATION);
-        carLocation.getLocation().add(location);
-        log.info("[addLocation] Location added");
+        log.info("[addLocation] Location saved");
+
+        car.setState(CAR_STATUS.ON_LOCATION);
+        car.getLocation().add(location);
+        carRepository.save(car);
+        log.info("[addLocation] Car state updated and saved");
+
+        log.info("[addLocation] Location creation process finished");
         return locationMapper.toLocationDtoOut(location);
     }
+
 
     public List<LocationDtoOut> getAllLocations(String email) {
         log.info("[getAllLocations] Getting all locations for client {}", email);
@@ -96,4 +135,5 @@ public class LocationService {
         log.info("[getAllLocations] Found {} locations", locations.size());
         return locationMapper.toLocationDtoOutList(locations);
     }
+
 }

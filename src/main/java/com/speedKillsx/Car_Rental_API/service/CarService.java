@@ -36,16 +36,13 @@ public class CarService {
     public CarDtoOut addCar(CarDtoIn carDtoIn) {
         if (carRepository.existsById(carDtoIn.getMatricule())) {
             log.error("[addCar] Car with matricule {} already exists", carDtoIn.getMatricule());
+            return null;
         }
         log.info("[addCar] Adding car with matricule {}", carDtoIn.getMatricule());
-        CarDtoOut carDtoOut = CarDtoOut.builder()
-                .matricule(carDtoIn.getMatricule())
-                .model(carDtoIn.getModel())
-                .state(AVAILABLE)
-                .distanceTraveled(0L)
-                .build();
-        carRepository.save(carMapper.toCar(carDtoOut));
-        return carDtoOut;
+        Car car = carMapper.toCar(carDtoIn);
+        car.setState(AVAILABLE);
+        carRepository.save(car);
+        return carMapper.toCarDtoOut(car);
     }
 
     public List<CarDtoOut> getAllCars() {

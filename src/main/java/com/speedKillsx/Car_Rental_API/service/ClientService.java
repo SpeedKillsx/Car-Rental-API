@@ -29,7 +29,7 @@ public class ClientService {
         log.info("[addClient] Adding client...");
 
         Client client = clientMapper.toClient(clientDtoIn);
-        client.setStateClient(CLIENT_STATUS.ACTIVE.toString());
+        client.setStateClient(CLIENT_STATUS.ACTIVE);
         clientRepository.save(client);
         log.info("[addClient] Client added");
         return clientMapper.toClientDtoOut(client);
@@ -46,7 +46,7 @@ public class ClientService {
     public ClientDtoOut updateClientState(String email, CLIENT_STATUS status){
         Client client = clientRepository.getClientByEmail(email);
         if(client == null) return null;
-        client.setStateClient(status.toString());
+        client.setStateClient(status);
         clientRepository.save(client);
         return clientMapper.toClientDtoOut(client);
     }

@@ -1,5 +1,6 @@
 package com.speedKillsx.Car_Rental_API.dto;
 
+import com.speedKillsx.Car_Rental_API.enums.CAR_STATUS;
 import lombok.*;
 
 @Data

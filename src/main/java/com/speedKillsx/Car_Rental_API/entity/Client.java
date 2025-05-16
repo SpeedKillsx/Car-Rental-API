@@ -1,5 +1,6 @@
 package com.speedKillsx.Car_Rental_API.entity;
 
+import com.speedKillsx.Car_Rental_API.enums.CLIENT_STATUS;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +21,8 @@ public class Client {
     private String lastName;
     private String email;
     private float debts;
-    private String stateClient;
+    @Enumerated(EnumType.STRING)
+    private CLIENT_STATUS stateClient;
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Location> location;

@@ -14,4 +14,5 @@ public class ClientDtoIn {
     private String lastName;
     private String email;
     private float debts;
+
 }
