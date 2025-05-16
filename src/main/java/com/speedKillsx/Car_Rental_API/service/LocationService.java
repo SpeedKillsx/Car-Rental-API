@@ -135,24 +135,24 @@ public class LocationService {
         return locationMapper.toLocationDtoOutList(locations);
     }
 
-    public RestitutionDtoOut carRestitution(RestitutionDTOIn restitutionDTOIn){
+    public RestitutionDtoOut carRestitution(RestitutionDTOIn restitutionDTOIn) {
         log.info("[carRestitution] Searching for car");
         RestitutionDtoOut restitutionDtoOut = locationRepository.findRentedCar(restitutionDTOIn.getDateBegin(),
                 restitutionDTOIn.getDateEnd(),
                 restitutionDTOIn.getCarMatricule());
         restitutionDtoOut.setDateRestitution(restitutionDTOIn.getDateRestitution());
-        if(restitutionDtoOut != null){
+        if (restitutionDtoOut != null) {
             log.info("[carRestitution] Found car");
             Optional<Location> location = locationRepository.findById(restitutionDtoOut.getId());
-            if(location.isPresent()){
+            if (location.isPresent()) {
                 log.info("[carRestitution] Location found with id {}", location.get().getId());
-                if (restitutionDtoOut.getDateRestitution().getDayOfYear() - location.get().getDateEnd().getDayOfYear() >   3){
+                if (restitutionDtoOut.getDateRestitution().getDayOfYear() - location.get().getDateEnd().getDayOfYear() > 3) {
                     log.warn("[carRestitution] Restitution date exceeds 3 days, penalities will be applied");
                     location.get().setLocationState(LOCATION_STATE.FINISHED);
                     locationRepository.save(location.get());
                     log.info("[carRestitution] Location state updated");
-                    Optional<Client> client  = clientRepository.findById(restitutionDtoOut.getClientId());
-                    if(client.isPresent()){
+                    Optional<Client> client = clientRepository.findById(restitutionDtoOut.getClientId());
+                    if (client.isPresent()) {
                         client.get().setStateClient(CLIENT_STATUS.PENALITY_APPLIED);
                         float clientDebts = location.get().getAmount().add(
                                 location.get().getAmount().multiply(BigDecimal.valueOf(0.25))
