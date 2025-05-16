@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RestituationDTOIn {
+public class RestitutionDTOIn {
     private LocalDate dateBegin;
     private LocalDate dateEnd;
     private LocalDate dateRestitution;

@@ -1,8 +1,6 @@
 package com.speedKillsx.Car_Rental_API.service;
 
-import com.speedKillsx.Car_Rental_API.dto.ClientLocationDto;
-import com.speedKillsx.Car_Rental_API.dto.LocationDtoIn;
-import com.speedKillsx.Car_Rental_API.dto.LocationDtoOut;
+import com.speedKillsx.Car_Rental_API.dto.*;
 import com.speedKillsx.Car_Rental_API.entity.Car;
 import com.speedKillsx.Car_Rental_API.entity.Client;
 import com.speedKillsx.Car_Rental_API.entity.Location;
@@ -16,6 +14,7 @@ import com.speedKillsx.Car_Rental_API.repository.LocationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -136,4 +135,40 @@ public class LocationService {
         return locationMapper.toLocationDtoOutList(locations);
     }
 
+    public RestitutionDtoOut carRestitution(RestitutionDTOIn restitutionDTOIn){
+        log.info("[carRestitution] Searching for car");
+        RestitutionDtoOut restitutionDtoOut = locationRepository.findRentedCar(restitutionDTOIn.getDateBegin(),
+                restitutionDTOIn.getDateEnd(),
+                restitutionDTOIn.getCarMatricule());
+        restitutionDtoOut.setDateRestitution(restitutionDTOIn.getDateRestitution());
+        if(restitutionDtoOut != null){
+            log.info("[carRestitution] Found car");
+            Optional<Location> location = locationRepository.findById(restitutionDtoOut.getId());
+            if(location.isPresent()){
+                log.info("[carRestitution] Location found with id {}", location.get().getId());
+                if (restitutionDtoOut.getDateRestitution().getDayOfYear() - location.get().getDateEnd().getDayOfYear() >   3){
+                    log.warn("[carRestitution] Restitution date exceeds 3 days, penalities will be applied");
+                    location.get().setLocationState(LOCATION_STATE.FINISHED);
+                    locationRepository.save(location.get());
+                    log.info("[carRestitution] Location state updated");
+                    Optional<Client> client  = clientRepository.findById(restitutionDtoOut.getClientId());
+                    if(client.isPresent()){
+                        client.get().setStateClient(CLIENT_STATUS.PENALITY_APPLIED);
+                        float clientDebts = location.get().getAmount().add(
+                                location.get().getAmount().multiply(BigDecimal.valueOf(0.25))
+                        ).floatValue();
+                        client.get().setDebts(clientDebts);
+                        log.info("[carRestitution] Debt amount set to {}", clientDebts);
+                        clientRepository.save(client.get());
+                        log.info("[carRestitution] Debt applied to client {}", client.get().getEmail());
+
+                        return restitutionDtoOut;
+                    }
+                }
+            }
+            return null;
+        }
+        log.info("[carRestitution] No location found during this rental period for car {}", restitutionDTOIn.getCarMatricule());
+        return null;
+    }
 }
