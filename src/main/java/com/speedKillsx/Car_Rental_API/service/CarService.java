@@ -34,12 +34,13 @@ public class CarService {
     }
 
     public CarDtoOut addCar(CarDtoIn carDtoIn) {
-        if (carRepository.existsById(carDtoIn.getMatricule())) {
+        Car car = carRepository.findByMatricule(carDtoIn.getMatricule());
+        if (car == null) {
             log.error("[addCar] Car with matricule {} already exists", carDtoIn.getMatricule());
             return null;
         }
         log.info("[addCar] Adding car with matricule {}", carDtoIn.getMatricule());
-        Car car = carMapper.toCar(carDtoIn);
+        car = carMapper.toCar(carDtoIn);
         car.setState(AVAILABLE);
         carRepository.save(car);
         return carMapper.toCarDtoOut(car);
@@ -47,11 +48,12 @@ public class CarService {
 
     public List<CarDtoOut> getAllCars() {
         log.info("[getAllCars] Getting all cars");
-        if (carRepository.findAll().isEmpty()) {
+        List<Car> cars = carRepository.findAll();
+        if (cars.isEmpty()) {
             log.error("[getAllCars] No cars found");
             return List.of();
         }
-        return carMapper.toCarDtoOutList(carRepository.findAll());
+        return carMapper.toCarDtoOutList(cars);
     }
 
     public boolean isCarRentable(String matricule) {
