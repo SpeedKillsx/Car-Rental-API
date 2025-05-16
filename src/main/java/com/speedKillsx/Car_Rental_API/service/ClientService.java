@@ -40,13 +40,17 @@ public class ClientService {
     }
 
     public ClientDtoOut getClientById(String email){
-        return clientMapper.toClientDtoOut(clientRepository.getClientByEmail(email));
+        Client client = clientRepository.getClientByEmail(email);
+        return clientMapper.toClientDtoOut(client);
     }
 
     public ClientDtoOut updateClientState(String email, CLIENT_STATUS status){
         Client client = clientRepository.getClientByEmail(email);
+        log.info("[updateClientState] Client found: {}", client.getEmail());
+        CLIENT_STATUS precedentStatus = client.getStateClient();
         if(client == null) return null;
         client.setStateClient(status);
+        log.info("[updateClientState] Client state updated from {} to {}", precedentStatus, status);
         clientRepository.save(client);
         return clientMapper.toClientDtoOut(client);
     }
