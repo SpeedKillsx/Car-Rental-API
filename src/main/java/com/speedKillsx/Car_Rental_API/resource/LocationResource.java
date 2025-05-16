@@ -23,29 +23,31 @@ public class LocationResource {
 
     private final LocationMapper locationMapper;
     private final LocationService locationService;
+
     @Autowired
     public LocationResource(LocationMapper locationMapper, LocationService locationService) {
         this.locationMapper = locationMapper;
         this.locationService = locationService;
     }
+
     @PostMapping("/create")
-    public ResponseEntity<LocationDtoOut> createLocation(@RequestBody LocationDtoIn locationDtoIn){
-        if(locationDtoIn == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    public ResponseEntity<LocationDtoOut> createLocation(@RequestBody LocationDtoIn locationDtoIn) {
+        if (locationDtoIn == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(locationService.addLocation(locationDtoIn), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Get client locations")
     @GetMapping("/{email}")
-    public ResponseEntity<List<LocationDtoOut>> getClientLocations(@PathVariable String email){
-        if(email == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<List<LocationDtoOut>> getClientLocations(@PathVariable String email) {
+        if (email == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(locationService.getAllLocations(email), HttpStatus.FOUND);
     }
 
     @Operation(summary = "Restitute a car",
-    responses = {
-            @ApiResponse(responseCode = "200", description = "Car restituted"),
-            @ApiResponse(responseCode = "404", description = "Car not found")
-    }
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Car restituted"),
+                    @ApiResponse(responseCode = "404", description = "Car not found")
+            }
     )
     @PostMapping("/restituate")
     public ResponseEntity<RestitutionDtoOut> restituteCar(@RequestBody RestitutionDTOIn restitutionDtoIn) {
