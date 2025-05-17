@@ -2,6 +2,7 @@ package com.speedKillsx.Car_Rental_API.dto;
 
 import com.speedKillsx.Car_Rental_API.enums.LOCATION_STATE;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class LocationDtoIn {
     private int id;
     private LocalDate dateBegin;

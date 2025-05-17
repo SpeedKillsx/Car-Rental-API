@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,7 +128,7 @@ public class LocationService {
         log.info("[getAllLocations] Found {} locations", client.getLocation().size());
         List<Location> locations = new java.util.ArrayList<>(List.of());
         for (Location location : locationRepository.findLocationsByClient_Email(email)) {
-            if (location.getLocationState().equals(LOCATION_STATE.ACTIVE.toString())) {
+            if (location.getLocationState().equals(LOCATION_STATE.ACTIVE)) {
                 locations.add(location);
             }
         }
@@ -141,34 +142,63 @@ public class LocationService {
                 restitutionDTOIn.getDateEnd(),
                 restitutionDTOIn.getCarMatricule());
         restitutionDtoOut.setDateRestitution(restitutionDTOIn.getDateRestitution());
-        if (restitutionDtoOut != null) {
-            log.info("[carRestitution] Found car");
-            Optional<Location> location = locationRepository.findById(restitutionDtoOut.getId());
-            if (location.isPresent()) {
-                log.info("[carRestitution] Location found with id {}", location.get().getId());
-                if (restitutionDtoOut.getDateRestitution().getDayOfYear() - location.get().getDateEnd().getDayOfYear() > 3) {
-                    log.warn("[carRestitution] Restitution date exceeds 3 days, penalities will be applied");
-                    location.get().setLocationState(LOCATION_STATE.FINISHED);
-                    locationRepository.save(location.get());
-                    log.info("[carRestitution] Location state updated");
-                    Optional<Client> client = clientRepository.findById(restitutionDtoOut.getClientId());
-                    if (client.isPresent()) {
-                        client.get().setStateClient(CLIENT_STATUS.PENALITY_APPLIED);
-                        float clientDebts = location.get().getAmount().add(
-                                location.get().getAmount().multiply(BigDecimal.valueOf(0.25))
-                        ).floatValue();
-                        client.get().setDebts(clientDebts);
-                        log.info("[carRestitution] Debt amount set to {}", clientDebts);
-                        clientRepository.save(client.get());
-                        log.info("[carRestitution] Debt applied to client {}", client.get().getEmail());
 
-                        return restitutionDtoOut;
-                    }
-                }
+        Optional<Location> location = locationRepository.findById(restitutionDtoOut.getId());
+        Optional<Client> client = clientRepository.findById(restitutionDtoOut.getClientId());
+
+        if (location.isEmpty() || client.isEmpty()) {
+            if (location.isEmpty()) {
+                log.warn("[carRestitution] Location not found");
+                return null;
             }
+            log.warn("[carRestitution] Client not found");
             return null;
         }
-        log.info("[carRestitution] No location found during this rental period for car {}", restitutionDTOIn.getCarMatricule());
-        return null;
+
+        log.info("[carRestitution] Location found with id {}", location.get().getId());
+        boolean applyPenality = isPenalityNeeded(restitutionDtoOut.getDateEnd(), restitutionDtoOut.getDateRestitution());
+
+        manageRestituiton(location.get(), client.get(), applyPenality);
+        restitutionDtoOut.setClientStatus(client.get().getStateClient());
+        restitutionDtoOut.setLocationState(location.get().getLocationState());
+        log.info("[carRestitution] Restitution process finished");
+        return restitutionDtoOut;
+
+
+    }
+
+    public boolean isPenalityNeeded(LocalDate endRentDate, LocalDate restitutionDate) {
+        log.info("[isPenalityNeeded] Checking if restitution date exceeds 3 days...");
+        if (restitutionDate == null) return false;
+        return restitutionDate.getDayOfYear() - endRentDate.getDayOfYear() > 3;
+    }
+
+    public void manageRestituiton(Location location, Client client, boolean isPenalityApplied) {
+        if (isPenalityApplied) {
+            log.info("[manageRestituiton] Restitution date exceeds 3 days, penalities will be applied");
+            location.setLocationState(LOCATION_STATE.FINISHED);
+            log.info("[manageRestituiton] Penality location state updated to FINISHED");
+            locationRepository.save(location);
+            log.info("[manageRestituiton] Location is finished");
+            client.setStateClient(CLIENT_STATUS.PENALITY_APPLIED);
+            float clientDebts = location.getAmount().add(
+                    location.getAmount().multiply(BigDecimal.valueOf(0.25))
+            ).floatValue();
+            client.setDebts(clientDebts);
+            log.info("[manageRestituiton] Client {} :  state updated to PENALITY_APPLIED", client.getEmail());
+            clientRepository.save(client);
+            log.info("[manageRestituiton] Client {} : debt applied", client.getEmail());
+        } else {
+            log.info("[manageRestituiton] Restitution date is within 3 days, penalities will not be applied");
+            location.setLocationState(LOCATION_STATE.FINISHED);
+            locationRepository.save(location);
+            log.info("[manageRestituiton] Location state updated to FINISHED");
+            client.setStateClient(CLIENT_STATUS.ACTIVE);
+            client.setDebts(0);
+            log.info("[manageRestituiton] Client {} :  state updated to ACTIVE", client.getEmail());
+            log.info("[manageRestituiton] Client {} : debt set to 0", client.getEmail());
+            clientRepository.save(client);
+
+        }
     }
 }

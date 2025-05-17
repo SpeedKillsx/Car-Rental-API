@@ -32,8 +32,9 @@ public class LocationResource {
 
     @PostMapping("/create")
     public ResponseEntity<LocationDtoOut> createLocation(@RequestBody LocationDtoIn locationDtoIn) {
-        if (locationDtoIn == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        return new ResponseEntity<>(locationService.addLocation(locationDtoIn), HttpStatus.CREATED);
+        LocationDtoOut locationDtoOut = locationService.addLocation(locationDtoIn);
+        if (locationDtoOut == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(locationDtoOut, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Get client locations")

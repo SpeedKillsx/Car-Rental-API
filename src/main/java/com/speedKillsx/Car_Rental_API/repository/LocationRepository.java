@@ -18,7 +18,7 @@ public interface LocationRepository extends JpaRepository<Location, Integer> {
 
     List<Location> findAllByCarOrderByDateBeginAsc(Car car);
 
-    @Query("SELECT new com.speedKillsx.Car_Rental_API.dto.RestitutionDtoOut(l.id,l.dateBegin, l.dateEnd, null,l.client.id, l.car.matricule) from Location l" +
+    @Query("SELECT new com.speedKillsx.Car_Rental_API.dto.RestitutionDtoOut(l.id,l.dateBegin, l.dateEnd, null,l.client.id, l.car.matricule, null, null) from Location l" +
             " where l.dateBegin =:dateBegin and l.dateEnd =:dateEnd AND " +
             "l.car.matricule =:matricule AND " +
             "l.locationState = 'ACTIVE'")
