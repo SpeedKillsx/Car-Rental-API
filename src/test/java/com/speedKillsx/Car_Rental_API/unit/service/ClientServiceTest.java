@@ -1,4 +1,4 @@
-package com.speedKillsx.Car_Rental_API.service;
+package com.speedKillsx.Car_Rental_API.unit.service;
 
 import com.speedKillsx.Car_Rental_API.dto.ClientDtoIn;
 import com.speedKillsx.Car_Rental_API.dto.ClientDtoOut;
@@ -6,6 +6,7 @@ import com.speedKillsx.Car_Rental_API.entity.Client;
 import com.speedKillsx.Car_Rental_API.enums.CLIENT_STATUS;
 import com.speedKillsx.Car_Rental_API.mapper.ClientMapper;
 import com.speedKillsx.Car_Rental_API.repository.ClientRepository;
+import com.speedKillsx.Car_Rental_API.service.ClientService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

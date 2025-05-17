@@ -38,6 +38,11 @@ public class CarResource {
     public ResponseEntity<CarDtoOut> createCar(@RequestBody CarDtoIn carDtoIn) {
         log.info("[createCar] Creating car");
         CarDtoOut car = carService.addCar(carDtoIn);
+        if (car == null) {
+            log.error("[createCar] Bad request");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        log.info("[createCar] Car created {} :", car.getMatricule());
         return new ResponseEntity<>(car, HttpStatus.ACCEPTED);
     }
 

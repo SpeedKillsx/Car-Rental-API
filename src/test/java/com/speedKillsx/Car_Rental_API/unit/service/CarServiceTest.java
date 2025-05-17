@@ -1,4 +1,4 @@
-package com.speedKillsx.Car_Rental_API.service;
+package com.speedKillsx.Car_Rental_API.unit.service;
 
 
 import com.speedKillsx.Car_Rental_API.dto.CarDtoIn;
@@ -10,6 +10,8 @@ import com.speedKillsx.Car_Rental_API.enums.INSPECTION_STATUS;
 import com.speedKillsx.Car_Rental_API.mapper.CarMapper;
 import com.speedKillsx.Car_Rental_API.repository.CarRepository;
 import com.speedKillsx.Car_Rental_API.repository.InspectionRepository;
+import com.speedKillsx.Car_Rental_API.service.CarService;
+import com.speedKillsx.Car_Rental_API.service.InspectionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

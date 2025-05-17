@@ -35,7 +35,7 @@ public class CarService {
 
     public CarDtoOut addCar(CarDtoIn carDtoIn) {
         Car car = carRepository.findByMatricule(carDtoIn.getMatricule());
-        if (car == null) {
+        if (car != null) {
             log.error("[addCar] Car with matricule {} already exists", carDtoIn.getMatricule());
             return null;
         }
