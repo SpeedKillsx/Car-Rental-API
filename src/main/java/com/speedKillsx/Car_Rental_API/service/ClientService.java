@@ -36,7 +36,8 @@ public class ClientService {
     }
 
     public List<ClientDtoOut> getAllClients() {
-        return clientMapper.toClientDtoOutList(clientRepository.findAll());
+        List<Client> clients = clientRepository.findAll();
+        return clientMapper.toClientDtoOutList(clients);
     }
 
     public ClientDtoOut getClientById(String email){

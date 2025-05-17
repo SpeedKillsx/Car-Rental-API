@@ -12,6 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -104,7 +106,7 @@ public class ClientServiceTest {
                 .debts(0)
                 .firstName("FirstName")
                 .lastName("LastName")
-                .email("test@email.com")
+                .email("test2@email.com")
                 .build();
 
         when(clientRepository.getClientByEmail(email)).thenReturn(client);
@@ -116,5 +118,54 @@ public class ClientServiceTest {
         assertEquals(clientDtoOut, result);
         assertEquals(clientMapper.toClientDtoOut(client), result);
         assertThat(client.getStateClient()).isEqualTo(clientStatus);
+    }
+
+    @Test
+    public  void getAllClients_success(){
+        Client client1 = Client.builder()
+                .stateClient(CLIENT_STATUS.ACTIVE)
+                .debts(0)
+                .firstName("FirstName")
+                .lastName("LastName")
+                .email("test@email.com")
+                .build();
+
+        Client client2 = Client.builder()
+                .stateClient(CLIENT_STATUS.PENALITY_APPLIED)
+                .debts(0)
+                .firstName("FirstName")
+                .lastName("LastName")
+                .email("test2@email.com")
+                .build();
+
+        List<Client> clients = List.of(client1, client2);
+
+        ClientDtoOut clientDtoOut1 = ClientDtoOut.builder()
+                .stateClient(CLIENT_STATUS.ACTIVE)
+                .debts(0)
+                .firstName("FirstName")
+                .lastName("LastName")
+                .email("test@email.com")
+                .build();
+
+        ClientDtoOut clientDtoOut2 = ClientDtoOut.builder()
+                .stateClient(CLIENT_STATUS.PENALITY_APPLIED)
+                .firstName("FirstName")
+                .lastName("LastName")
+                .email("test2@email.com")
+                .build();
+        List<ClientDtoOut> clientDtoOutList = List.of(clientDtoOut1, clientDtoOut2);
+
+        when(clientRepository.findAll()).thenReturn(clients);
+        when(clientMapper.toClientDtoOutList(clients)).thenReturn(clientDtoOutList);
+
+        List<ClientDtoOut> result = clientService.getAllClients();
+        assertNotNull(result);
+        assertEquals(clientDtoOutList, result);
+        assertEquals(clientMapper.toClientDtoOutList(clients), result);
+        assertEquals(client1.getStateClient(), CLIENT_STATUS.ACTIVE);
+        assertEquals(client2.getStateClient(), CLIENT_STATUS.PENALITY_APPLIED);
+        assertEquals(client1.getEmail(), clientDtoOut1.getEmail());
+        assertEquals(client2.getEmail(), clientDtoOut2.getEmail());
     }
 }
