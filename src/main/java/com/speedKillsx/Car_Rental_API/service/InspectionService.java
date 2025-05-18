@@ -10,12 +10,14 @@ import com.speedKillsx.Car_Rental_API.mapper.InspectionMapper;
 import com.speedKillsx.Car_Rental_API.repository.CarRepository;
 import com.speedKillsx.Car_Rental_API.repository.InspectionRepository;
 import com.speedKillsx.Car_Rental_API.repository.LocationRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+@Slf4j
 @Service
 public class InspectionService {
     private final InspectionRepository inspectionRepository;
@@ -32,12 +34,21 @@ public class InspectionService {
     }
 
     public InspectionDtoOut addInspection(InspectionDtoIn inspectionDtoIn) {
+        log.info("[addInspection] Adding inspection for car with matricule {}...", inspectionDtoIn.getCarMatricule());
+        Inspection inspection = inspectionMapper.toInspection(inspectionDtoIn);
+        log.info("[addInspection] Inspection created with id {} for car {} ", inspection.getId(), inspection.getCar().getMatricule());
+        String carMatricule = inspection.getCar().getMatricule();
 
-        Inspection inspection = inspectionRepository.save(inspectionMapper.toInspection(inspectionDtoIn));
-        Car carInspected = inspection.getCar();
-        carInspected.getInspections().add(inspection);
+        Car carInspected = carRepository.findByMatricule(carMatricule);
+        if(carInspected == null){
+            log.error("[addInspection] Car with matricule {} not found", inspection.getCar().getMatricule());
+            return null;
+        }
+        Inspection saveInspection =  inspectionRepository.save(inspection);
+        carInspected.getInspections().add(saveInspection);
         carRepository.save(carInspected);
-        return inspectionMapper.toInspectionDtoOut(inspection);
+
+        return inspectionMapper.toInspectionDtoOut(saveInspection);
     }
 
     public boolean isCarWithinAllowedRentalPeriod(String carMatricule) {
@@ -80,4 +91,5 @@ public class InspectionService {
         carRepository.save(car);
         return inspection;
     }
+
 }

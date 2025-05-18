@@ -16,12 +16,13 @@ import java.time.LocalDate;
 @Builder
 public class Inspection {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Enumerated(EnumType.STRING)
     private INSPECTION_STATUS stateInspection;
     private LocalDate dateInspection;
 
     @ManyToOne
-    @JoinColumn(name = "car_matricule")
+    @JoinColumn(name = "car_matricule", nullable = false)
     private Car car;
 }

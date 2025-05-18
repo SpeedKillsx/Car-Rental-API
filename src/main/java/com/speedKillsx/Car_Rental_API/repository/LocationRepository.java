@@ -26,4 +26,7 @@ public interface LocationRepository extends JpaRepository<Location, Integer> {
                                     @Param("dateEnd") LocalDate dateEnd,
                                     @Param("matricule") String matricule
     );
+
+    @Query("SELECT l from Location l where l.dateEnd <=:targetDate and l.locationState ='ACTIVE'")
+    List<Location> findLateLocation(@Param("targetDate") LocalDate targetDate);
 }
